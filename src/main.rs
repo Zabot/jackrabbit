@@ -3,11 +3,11 @@ use std::fs;
 
 use askama::Template;
 use clap::Parser;
-use tracing::info;
-use tracing_subscriber;
 use rouille::Request;
 use rouille::Response;
 use serde_derive::Deserialize;
+use tracing::info;
+use tracing_subscriber;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -49,14 +49,22 @@ fn handle_plugin(request: &Request) -> Response {
     }
 }
 
-fn handle_search(bookmarks: &HashMap<String, String>, default: &str, request: &Request) -> Response {
+fn handle_search(
+    bookmarks: &HashMap<String, String>,
+    default: &str,
+    request: &Request,
+) -> Response {
     match request.get_param("q") {
         None => Response::text("Missing query").with_status_code(400),
         Some(query) => {
             for (key, target) in bookmarks {
                 // If key is perfect equality, do a permanent redirect
                 if key.eq(&query) {
-                    info!(key = key.as_str(), target = target.as_str(), "permanent redirect");
+                    info!(
+                        key = key.as_str(),
+                        target = target.as_str(),
+                        "permanent redirect"
+                    );
                     return Response::redirect_301(target.clone());
                 }
 
@@ -65,7 +73,11 @@ fn handle_search(bookmarks: &HashMap<String, String>, default: &str, request: &R
                 match query.strip_prefix(&prefix) {
                     Some(m) => {
                         let url = target.replace("{}", m.trim());
-                        info!(key = key.as_str(), target = url.as_str(), "temporary redirect");
+                        info!(
+                            key = key.as_str(),
+                            target = url.as_str(),
+                            "temporary redirect"
+                        );
                         return Response::redirect_302(url);
                     }
                     None => {}
@@ -89,7 +101,11 @@ fn main() {
     let config: Config = toml::from_str(&config_contents).unwrap();
 
     for (key, value) in &config.bookmarks {
-        info!(key = key.as_str(), target = value.as_str(), "loaded bookmark");
+        info!(
+            key = key.as_str(),
+            target = value.as_str(),
+            "loaded bookmark"
+        );
     }
 
     info!(interface = config.interface.as_str(), "jackrabbit running");
