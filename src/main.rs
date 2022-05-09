@@ -20,6 +20,7 @@ struct PluginTemplate<'a> {
 #[derive(Deserialize)]
 struct Config {
     interface: String,
+    default: String,
     bookmarks: HashMap<String, String>,
 }
 
@@ -39,7 +40,7 @@ fn handle_plugin(request: &Request) -> Response {
     }
 }
 
-fn handle_search(bookmarks: &HashMap<String, String>, request: &Request) -> Response {
+fn handle_search(bookmarks: &HashMap<String, String>, default: &str, request: &Request) -> Response {
     match request.get_param("q") {
         None => Response::text("Missing query").with_status_code(400),
         Some(query) => {
@@ -61,7 +62,11 @@ fn handle_search(bookmarks: &HashMap<String, String>, request: &Request) -> Resp
                     None => {}
                 }
             }
-            Response::text(query).with_status_code(200)
+
+            // Fall back to default
+            let url = default.replace("{}", query.trim());
+            info!(target = url; "default redirect");
+            return Response::redirect_302(url);
         }
     }
 }
@@ -80,7 +85,7 @@ fn main() {
         rouille::router!(request,
             (GET) ["/"] => handle_index(&request),
             (GET) ["/opensearch.xml"] => handle_plugin(&request),
-            (GET) ["/search"] => handle_search(&config.bookmarks, &request),
+            (GET) ["/search"] => handle_search(&config.bookmarks, &config.default, &request),
             _ => Response::text("Not found").with_status_code(404)
         )
     });
