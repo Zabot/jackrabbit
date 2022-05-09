@@ -1,5 +1,5 @@
-use std::fs;
 use std::collections::HashMap;
+use std::fs;
 
 use askama::Template;
 use rouille::Request;
@@ -8,11 +8,11 @@ use serde_derive::Deserialize;
 
 #[derive(Template)]
 #[template(path = "index.html")]
-struct IndexTemplate{}
+struct IndexTemplate {}
 
 #[derive(Template)]
 #[template(path = "opensearch.xml")]
-struct PluginTemplate<'a>{
+struct PluginTemplate<'a> {
     host: &'a str,
 }
 
@@ -22,7 +22,7 @@ struct Config {
 }
 
 fn handle_index(_request: &Request) -> Response {
-    let index = IndexTemplate{};
+    let index = IndexTemplate {};
     Response::html(index.render().unwrap())
 }
 
@@ -30,9 +30,7 @@ fn handle_plugin(request: &Request) -> Response {
     match request.header("Host") {
         None => Response::text("Missing Host").with_status_code(400),
         Some(host) => {
-            let search = PluginTemplate{
-                host: host,
-            };
+            let search = PluginTemplate { host: host };
             let body = search.render().unwrap().into_bytes();
             Response::from_data("text/xml", body)
         }
@@ -70,12 +68,11 @@ fn main() {
     let config: Config = toml::from_str(&config_contents).unwrap();
 
     rouille::start_server("0.0.0.0:8080", move |request| {
-		rouille::router!(request,
-			(GET) ["/"] => handle_index(&request),
-			(GET) ["/opensearch.xml"] => handle_plugin(&request),
+        rouille::router!(request,
+            (GET) ["/"] => handle_index(&request),
+            (GET) ["/opensearch.xml"] => handle_plugin(&request),
             (GET) ["/search"] => handle_search(&config.bookmarks, &request),
             _ => Response::text("Not found").with_status_code(404)
-		)
+        )
     });
 }
-
