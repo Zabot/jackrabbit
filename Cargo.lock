@@ -272,6 +272,7 @@ name = "jackrabbit"
 version = "0.1.0"
 dependencies = [
  "askama",
+ "log",
  "rouille",
  "serde",
  "serde_derive",

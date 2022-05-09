@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 askama = "0.11.1"
+log = "0.4.17"
 rouille = "3.5.0"
 serde = "1.0.137"
 serde_derive = "1.0.137"

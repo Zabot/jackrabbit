@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::fs;
 
 use askama::Template;
+use log::info;
 use rouille::Request;
 use rouille::Response;
 use serde_derive::Deserialize;
@@ -41,17 +42,19 @@ fn handle_search(bookmarks: &HashMap<String, String>, request: &Request) -> Resp
     match request.get_param("q") {
         None => Response::text("Missing query").with_status_code(400),
         Some(query) => {
-            for (key, value) in bookmarks {
+            for (key, target) in bookmarks {
                 // If key is perfect equality, do a permanent redirect
                 if key.eq(&query) {
-                    return Response::redirect_301(value.clone());
+                    info!(key = key, target = target; "permanent redirect");
+                    return Response::redirect_301(target.clone());
                 }
 
                 // Append a space and check for prefix
                 let prefix = format!("{} ", key);
                 match query.strip_prefix(&prefix) {
                     Some(m) => {
-                        let url = value.replace("{}", m.trim());
+                        let url = target.replace("{}", m.trim());
+                        info!(key = key, target = url; "temporary redirect");
                         return Response::redirect_302(url);
                     }
                     None => {}
@@ -63,11 +66,17 @@ fn handle_search(bookmarks: &HashMap<String, String>, request: &Request) -> Resp
 }
 
 fn main() {
-    println!("Loading bookmarks");
+    info!("Loading bookmarks...");
     let config_contents = fs::read_to_string("jackrabbit.toml").expect("Failed to read config");
     let config: Config = toml::from_str(&config_contents).unwrap();
 
-    rouille::start_server("0.0.0.0:8080", move |request| {
+    for (key, value) in &config.bookmarks {
+        info!("{} -> {}", &key, &value);
+    }
+
+    let interface = "0.0.0.0:8080";
+    info!("Jackrabbit running on {}", interface);
+    rouille::start_server(interface, move |request| {
         rouille::router!(request,
             (GET) ["/"] => handle_index(&request),
             (GET) ["/opensearch.xml"] => handle_plugin(&request),
