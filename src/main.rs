@@ -2,11 +2,19 @@ use std::collections::HashMap;
 use std::fs;
 
 use askama::Template;
+use clap::Parser;
 use tracing::info;
 use tracing_subscriber;
 use rouille::Request;
 use rouille::Response;
 use serde_derive::Deserialize;
+
+#[derive(Parser, Debug)]
+#[clap(author, version, about, long_about = None)]
+struct Args {
+    #[clap(short, long)]
+    config: String,
+}
 
 #[derive(Template)]
 #[template(path = "index.html")]
@@ -74,10 +82,10 @@ fn handle_search(bookmarks: &HashMap<String, String>, default: &str, request: &R
 
 fn main() {
     tracing_subscriber::fmt::init();
+    let args = Args::parse();
 
-    let config_path = "jackrabbit.toml";
-    info!(config = config_path, "loading config");
-    let config_contents = fs::read_to_string(config_path).expect("Failed to read config");
+    info!(config = args.config.as_str(), "loading config");
+    let config_contents = fs::read_to_string(args.config).expect("Failed to read config");
     let config: Config = toml::from_str(&config_contents).unwrap();
 
     for (key, value) in &config.bookmarks {
