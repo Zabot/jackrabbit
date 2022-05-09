@@ -19,6 +19,7 @@ struct PluginTemplate<'a> {
 
 #[derive(Deserialize)]
 struct Config {
+    interface: String,
     bookmarks: HashMap<String, String>,
 }
 
@@ -74,9 +75,8 @@ fn main() {
         info!("{} -> {}", &key, &value);
     }
 
-    let interface = "0.0.0.0:8080";
-    info!("Jackrabbit running on {}", interface);
-    rouille::start_server(interface, move |request| {
+    info!("Jackrabbit running on {}", config.interface);
+    rouille::start_server(config.interface, move |request| {
         rouille::router!(request,
             (GET) ["/"] => handle_index(&request),
             (GET) ["/opensearch.xml"] => handle_plugin(&request),

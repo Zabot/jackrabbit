@@ -1,3 +1,5 @@
+interface = "127.0.0.1:8080"
+
 [bookmarks]
 g = "https://duckduckgo.com/?q={}"
 gh = "https://github.com/"
