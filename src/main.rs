@@ -107,12 +107,14 @@ fn main() {
             "loaded bookmark"
         );
     }
+    let icon_bytes = include_bytes!("../templates/jackrabbit.png");
 
     info!(interface = config.interface.as_str(), "jackrabbit running");
     rouille::start_server(config.interface, move |request| {
         rouille::router!(request,
             (GET) ["/"] => handle_index(&request),
             (GET) ["/opensearch.xml"] => handle_plugin(&request),
+            (GET) ["/jackrabbit.png"] => Response::from_data("image/png", *icon_bytes),
             (GET) ["/search"] => handle_search(&config.bookmarks, &config.default, &request),
             _ => Response::text("Not found").with_status_code(404)
         )

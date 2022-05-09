@@ -4,4 +4,5 @@
   <Description>Jackrabbit</Description>
   <InputEncoding>UTF-8</InputEncoding>
   <Url type="text/html" method="get" template="http://{{ host }}/search?q={searchTerms}"/>
+  <Image width="32" height="32" type="image/png">/jackrabbit.png</Image>
 </OpenSearchDescription>
