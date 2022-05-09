@@ -1,0 +1,7 @@
+[bookmarks]
+g = "https://duckduckgo.com/?q={}"
+gh = "https://github.com/"
+go = "https://pkg.go.dev/search?q={}"
+rust = "https://docs.rs/releases/search?query={}"
+std = "https://www.cplusplus.com/search.do?q={}"
+
