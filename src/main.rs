@@ -2,7 +2,8 @@ use std::collections::HashMap;
 use std::fs;
 
 use askama::Template;
-use log::info;
+use tracing::info;
+use tracing_subscriber;
 use rouille::Request;
 use rouille::Response;
 use serde_derive::Deserialize;
@@ -47,7 +48,7 @@ fn handle_search(bookmarks: &HashMap<String, String>, default: &str, request: &R
             for (key, target) in bookmarks {
                 // If key is perfect equality, do a permanent redirect
                 if key.eq(&query) {
-                    info!(key = key, target = target; "permanent redirect");
+                    info!(key = key.as_str(), target = target.as_str(), "permanent redirect");
                     return Response::redirect_301(target.clone());
                 }
 
@@ -56,7 +57,7 @@ fn handle_search(bookmarks: &HashMap<String, String>, default: &str, request: &R
                 match query.strip_prefix(&prefix) {
                     Some(m) => {
                         let url = target.replace("{}", m.trim());
-                        info!(key = key, target = url; "temporary redirect");
+                        info!(key = key.as_str(), target = url.as_str(), "temporary redirect");
                         return Response::redirect_302(url);
                     }
                     None => {}
@@ -65,22 +66,25 @@ fn handle_search(bookmarks: &HashMap<String, String>, default: &str, request: &R
 
             // Fall back to default
             let url = default.replace("{}", query.trim());
-            info!(target = url; "default redirect");
+            info!(target = url.as_str(), "default redirect");
             return Response::redirect_302(url);
         }
     }
 }
 
 fn main() {
-    info!("Loading bookmarks...");
-    let config_contents = fs::read_to_string("jackrabbit.toml").expect("Failed to read config");
+    tracing_subscriber::fmt::init();
+
+    let config_path = "jackrabbit.toml";
+    info!(config = config_path, "loading config");
+    let config_contents = fs::read_to_string(config_path).expect("Failed to read config");
     let config: Config = toml::from_str(&config_contents).unwrap();
 
     for (key, value) in &config.bookmarks {
-        info!("{} -> {}", &key, &value);
+        info!(key = key.as_str(), target = value.as_str(), "loaded bookmark");
     }
 
-    info!("Jackrabbit running on {}", config.interface);
+    info!(interface = config.interface.as_str(), "jackrabbit running");
     rouille::start_server(config.interface, move |request| {
         rouille::router!(request,
             (GET) ["/"] => handle_index(&request),
